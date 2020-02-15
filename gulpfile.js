@@ -1,5 +1,5 @@
 // including plugins
-var gulp = require('gulp'), 
+var gulp = require('gulp'),
     uglify = require("gulp-uglify"),
     clean = require("gulp-clean"),
     browserify = require('browserify'),
@@ -22,7 +22,7 @@ gulp.task('clean', function() {
 });
 
 gulp.task('copy', function(){
-    gulp.src(['./res/**/*'])
+    return gulp.src(['./res/**/*'])
         .pipe(gulp.dest('build'))
         .pipe(reload());
 });
@@ -41,7 +41,7 @@ gulp.task('dry-di', function () {
         // ["transform-class-properties"]
       // ],
       presets:[
-        ["env", {targets:{uglify:[]}}
+        ["@babel/preset-env", {"forceAllTransforms": true}
       ]
   ]});
 
@@ -63,7 +63,7 @@ gulp.task( "build-atcore-worker", function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}]
+        ["@babel/preset-env", {"forceAllTransforms": true}]
       ]
   });
 
@@ -72,7 +72,7 @@ gulp.task( "build-atcore-worker", function () {
     .pipe(fs.createWriteStream("build/atcore.worker.js", {create:true, encoding:"UTF-8"}));
 });
 
-gulp.task("build-test", ["build-atcore-worker"], function () {
+gulp.task("build-test", gulp.series(["build-atcore-worker"], function () {
 
   var b = browserify({
     entries: './src/test.js',
@@ -87,7 +87,7 @@ gulp.task("build-test", ["build-atcore-worker"], function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}]
+        ["@babel/preset-env", {"forceAllTransforms": true}]
       ]
   });
 
@@ -95,16 +95,16 @@ gulp.task("build-test", ["build-atcore-worker"], function () {
     .bundle()
     .on("end", () => reload.changed("app.js") )
     .pipe(fs.createWriteStream("build/test.js", {create:true, encoding:"UTF-8"}));
-});
+}));
 
-gulp.task('run-test', ['build-test'], function(){
+gulp.task('run-test', gulp.series(['build-test'], function(){
   execFileSync("node.exe", ["build/test.node.js"], {stdio:[0,1,2]} );
-});
+}));
 
-gulp.task('test', ['run-test'], function(){
+gulp.task('test', gulp.series(['run-test'], function(){
   reload.listen();
   gulp.watch('./src/**/*', ['run-test']);
-});
+}));
 
 function swallowError (error) {
   console.log(error.toString())
@@ -113,9 +113,9 @@ function swallowError (error) {
 
 gulp.task('build', function () {
     throw "Deprecated. Use nw-build instead";
-    
+
     var asar = require('asar');
-    
+
   var b = browserify({
     entries: './src/pc.js',
     debug: true
@@ -129,7 +129,7 @@ gulp.task('build', function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}
+        ["@babel/preset-env", {"forceAllTransforms": true}
       ]
   ]});
 
@@ -159,7 +159,7 @@ gulp.task('nw-build', function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}
+        ["@babel/preset-env", {"forceAllTransforms": true}
       ]
   ]});
 
@@ -188,7 +188,7 @@ gulp.task('web-build', function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}
+        ["@babel/preset-env", {"forceAllTransforms": true}
       ]
   ]});
 
@@ -206,7 +206,7 @@ gulp.task('web-build', function () {
 
 
 gulp.task('pg-build', function () {
-  
+
   var b = browserify({
     entries: './src/mobile.js',
     debug: true
@@ -220,7 +220,7 @@ gulp.task('pg-build', function () {
         ["import-glob"]
       ],
       presets:[
-        ["env", {targets:{uglify:[]}}
+        ["@babel/preset-env", {"forceAllTransforms": true}
       ]
   ]});
 
@@ -242,7 +242,7 @@ gulp.task('pg-copy', function(){
 
 gulp.task('cordova', function( cb ){
     let cordova = require("cordova-lib").cordova;
-    process.env.PWD = __dirname + "/build"; 
+    process.env.PWD = __dirname + "/build";
     cordova.build({
         "platforms": ["android"],
         "options": {
@@ -253,20 +253,20 @@ gulp.task('cordova', function( cb ){
 
 gulp.task('android', sequence('clean', 'pg-copy', 'pg-move', 'pg-build', 'cordova'))
 
-gulp.task('watch', ['build', 'copy'], function(){
+gulp.task('watch', gulp.series(['build', 'copy'], function(){
     gulp.watch('./src/**/*', ['build']);
     gulp.watch('./res/**/*', ['copy']);
-});
+}));
 
-gulp.task('nw-watch', ['nw-build', 'copy'], function(){
+gulp.task('nw-watch', gulp.series(['nw-build', 'copy'], function(){
     gulp.watch('./src/**/*', ['nw-build']);
     gulp.watch('./res/**/*', ['copy']);
-});
+}));
 
-gulp.task('web-watch', ['web-build', 'copy'], function(){
+gulp.task('web-watch', gulp.series(['web-build', 'copy'], function(){
     gulp.watch('./src/**/*', ['web-build']);
     gulp.watch('./res/**/*', ['copy']);
-});
+}));
 
 gulp.task('run', function(){
   gulp.watch('./src/**/*', ['build']);
