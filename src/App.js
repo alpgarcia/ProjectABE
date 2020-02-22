@@ -46,7 +46,7 @@ class App {
 	12:"ArrowUp",
 	15:"ArrowRight",
 	13:"ArrowDown",
-	14:"ArrowLeft"	
+	14:"ArrowLeft"
     }
 
     unblockable = {
@@ -57,7 +57,7 @@ class App {
 
     mappings = {
     }
-    
+
     constructor(){
 
         window.store = this.store;
@@ -88,7 +88,7 @@ class App {
 	this.initKeyboard();
 	this.initControllers();
 
-        this.pool.call("enterSplash");
+        // this.pool.call("enterSplash");
 
         setInterval( this.commit.bind(this), 3000 );
 
@@ -108,13 +108,15 @@ class App {
 	    event.stopPropagation();
 	    event.preventDefault();
 	}
-	
+
         function done(){
             pending--;
             if( !pending )
                 this.pool.call( "exitSplash" );
 
         }
+
+        this.pool.call("Welcome");
 
     }
 
@@ -132,11 +134,11 @@ class App {
 
 	window.addEventListener("gamepadconnected", connecthandler);
 	window.addEventListener("gamepaddisconnected", disconnecthandler);
-	
+
     }
 
     onPollTickListeners( list ){
-	list.push(this);	
+	list.push(this);
     }
 
     tick(){
@@ -147,8 +149,8 @@ class App {
 		if( c[gp.index] ) c[gp.index].gamepad = gp;
 		else c[gp.index] = {gamepad:gp, state:{}};
 		return c;
-	    }, controllers);	
-	
+	    }, controllers);
+
 	for( let k in controllers ){
 	    let {gamepad, state} = controllers[k];
 
@@ -158,7 +160,7 @@ class App {
 	    if( upDown < -0.5 ) upDown = -1;
 	    else if( upDown > 0.5 ) upDown = 1;
 	    else upDown = 0;
-	    
+
 	    if( leftRight < -0.5 ) leftRight = -1;
 	    else if( leftRight > 0.5 ) leftRight = 1;
 	    else leftRight = 0;
@@ -169,9 +171,9 @@ class App {
 		    this.inputUp("ArrowUp");
 		else if( state.upDown > 0 )
 		    this.inputUp("ArrowDown");
-		
+
 		state.upDown = upDown;
-		
+
 		if( upDown < 0 ) this.inputDown("ArrowUp");
 		else if( upDown > 0 ) this.inputDown("ArrowDown");
 
@@ -183,21 +185,21 @@ class App {
 		    this.inputUp("ArrowLeft");
 		else if( state.leftRight > 0 )
 		    this.inputUp("ArrowRight");
-		
+
 		state.leftRight = leftRight;
-		
+
 		if( leftRight < 0 ) this.inputDown("ArrowLeft");
 		else if( leftRight > 0 ) this.inputDown("ArrowRight");
 
 	    }
-	    
+
 	    for( let i in this.gamepadmap ){
 		let pressed = gamepad.buttons[i];
-		
+
 		if( typeof pressed == "object" )
 		    pressed = pressed.pressed;
 		else pressed = pressed >= 0.5;
-		
+
 		if( pressed != state[i] ){
 		    state[i] = pressed;
 
@@ -207,7 +209,7 @@ class App {
 		}
 	    }
 	}
-	
+
     }
 
     inputDown( code ){
@@ -215,7 +217,7 @@ class App {
 	for( let i=0; i<this.activeSequences.length; ++i ){
 	    let obj = this.activeSequences[i];
 	    let next = obj.seq[ obj.pos++ ];
-	    
+
 	    if( next !== code || obj.pos >= obj.seq.length ){
 		if( next == code )
 		    this.pool.call( obj.name );
@@ -232,8 +234,8 @@ class App {
 		    seq
 		});
 	}
-	
-	return this.pool.call("onPress" + code );	
+
+	return this.pool.call("onPress" + code );
     }
 
     inputUp( code ){
@@ -241,7 +243,7 @@ class App {
     }
 
     initKeyboard(){
-	
+
 	document.body.addEventListener("keydown", evt => {
 
 	    let code = evt.code;
@@ -255,7 +257,7 @@ class App {
 		evt.preventDefault();
 		evt.stopPropagation();
 	    }
-		
+
 	});
 
 	document.body.addEventListener("keyup", evt => {
@@ -276,7 +278,7 @@ class App {
         this.controllers.forEach((controller) => {
             this.pool.add( controller );
         });
-	
+
     }
 
     openModel( name, cb, model ){
@@ -313,7 +315,7 @@ class App {
 	    let onGetModel = data => {
 
 		if( data ){
-		    
+
 		    model.load( data );
 		    if( model.getItem("color") === undefined )
 			model.setItem("color", Math.random()*10 | 0);
@@ -327,41 +329,41 @@ class App {
 		    model.setItem("version", 1);
 
 		    model.setItem("color", Math.random()*10 | 0);
-		    
+
 		}else if( model.getItem("color") === undefined )
 		    model.setItem("color", Math.random()*10 | 0);
 
-		
+
 		this.pool.call( name + "ModelInit", model, cb );
-		
+
 	    };
 
-            if( data ){
-		try{
-		    data=JSON.parse(data);
-		}catch(ex){
-		    data=null;
-		}
-	    }
-
-	    if( !data || !Array.isArray(data) )
-		return onGetModel( data );
-
-	    let map = {}, pending = data.length;
-
-	    data.forEach( de => {
-
-		this.store.getTextItem( path + "/" + de, item => {
-		    if( typeof item == 'string' )
-			map[de] = JSON.parse(item);
-		    
-		    pending--;
-		    if( !pending )
-			onGetModel( map );
-		    
-		});
-		
-	    });
+            // if( data ){
+		// try{
+		//     data=JSON.parse(data);
+		// }catch(ex){
+		//     data=null;
+		// }
+	    // }
+            //
+	    // if( !data || !Array.isArray(data) )
+		// return onGetModel( data );
+            //
+	    // let map = {}, pending = data.length;
+            //
+	    // data.forEach( de => {
+            //
+		// this.store.getTextItem( path + "/" + de, item => {
+		//     if( typeof item == 'string' )
+		// 	map[de] = JSON.parse(item);
+            //
+		//     pending--;
+		//     if( !pending )
+		// 	onGetModel( map );
+            //
+		// });
+            //
+	    // });
 
         });
 
@@ -383,9 +385,9 @@ class App {
 	    crait:"http://www.crait.net/arduboy/repo2.json",
 	    TeamARG:"repo.json"
 	});
-	
+
 	cb();
-	
+
     }
 
     commit(){

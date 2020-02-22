@@ -19,7 +19,7 @@ class Env extends IController {
 	}else{
 	    this._init();
             this._show();
-	}	
+	}
     }
 
     _init(){
@@ -27,16 +27,16 @@ class Env extends IController {
 	let list = this.model.getItem("app.repoList");
 	if( !repoName )
 	    repoName = Object.keys(list)[0];
-	
+
 	this.changeRepo( {element:{dataset:{
 	    key:repoName,
 	    url:list[repoName]
 	}}} );
-	
+
 	list = [];
 	this.userGameSource.getUserGames(list);
 	this.model.setItem("app.projList", list);
-	
+
     }
 
     exitSim(){
@@ -56,8 +56,8 @@ class Env extends IController {
 	repoURL = (/^https?.*/.test(repoURL) ? proxy : "") + repoURL;
 
 	let age = (new Date()).valueOf() - this.model.getItem(["app", "repodata", repoName, "timestamp"], 0);
-	
-	if( age > 5 * 60 * 60 * 1000 )	
+
+	if( age > 5 * 60 * 60 * 1000 )
 	    fetch( repoURL )
 	    .then( rsp => rsp.json() )
 	    .then( json => this._updateRepo( repoName, json ) )
@@ -70,7 +70,7 @@ class Env extends IController {
 		this.model.getModel(["app", "repodata", repoName], true).data
 	    )
 	);
-	this.model.setItem("ram.repo", clone );	
+	this.model.setItem("ram.repo", clone );
     }
 
     _updateRepo( repoName, json ){
@@ -80,12 +80,12 @@ class Env extends IController {
 	}
 
 	json.timestamp = (new Date()).valueOf();
-	
+
 	json.items.forEach( item => {
-	    
+
 	    item.author = item.author || "<<unknown>>";
 	    item.title = item.title || item.name || "Untitled";
-	    
+
 	    if(
 		(item.banner||item.cover) && (
 		    !item.screenshots ||
@@ -93,7 +93,7 @@ class Env extends IController {
 			!item.screenshots[0].filename
 		))
 		item.screenshots = [{filename:(item.banner||item.cover)}];
-	    
+
 	    if( (item.arduboy||item.hex) && (
 		!item.binaries ||
 		    !item.binaries[0] ||
@@ -103,14 +103,14 @@ class Env extends IController {
 
 	    if( !item.sourceUrl && item.url )
 		item.sourceUrl = item.url;
-	    
+
 	});
 
 	this.model.setItem(["app", "repodata", repoName], json);
 
 	if( repoName == this.model.getItem("ram.currentRepo") )
 	    this.activateRepo( repoName );
-	
+
     }
 
     onDropFile( dom, event ){
@@ -125,21 +125,21 @@ class Env extends IController {
 
 	for (var i = 0; i < files.length; i++) {
 	    let file = files[i];
-	    
+
 	    this.model.setItem('ram.srcpath', ["app", "sources", file.name]);
-	    
+
 	    if( /.*\.hex$/i.test(file.name) )
 		return loadFileHex.call( this, file );
-	    
+
 	    if( /.*\.arduboy$/i.test(file.name) )
 		return loadFileArduboy.call( this, file );
-	    
+
 	}
 
 	function loadFileHex( file ){
 	    let fr = new FileReader();
 	    fr.onload = evt => {
-		this.model.removeItem("app.AT32u4");		
+		this.model.removeItem("app.AT32u4");
 		this.model.setItem("app.AT32u4.hex", fr.result);
 		let source = this.model.getModel( this.model.getItem("ram.srcpath"), true );
 		source.setItem(["build.hex"], fr.result);
@@ -147,13 +147,13 @@ class Env extends IController {
 	    };
 	    fr.readAsText(file);
 	}
-	
+
 	function loadFileArduboy( file ){
 	    let fr = new FileReader();
 	    fr.onload = evt => this.loadArduboy( fr.result );
 	    fr.readAsArrayBuffer(file);
 	}
-	
+
     }
 
     embed( dom, evt ){
@@ -180,6 +180,15 @@ class Env extends IController {
 	    window.open( this.model.getItem("ram.preview.aburl") );
     }
 
+    Welcome(){
+	if( !self.core )
+	    this.play({element:{dataset:{
+		title:'Welcome Message',
+		url:'welcome_message.hex',
+		proxy:false
+	    }}});
+    }
+
     Konami(){
 	if( !self.core )
 	    this.play({element:{dataset:{
@@ -188,11 +197,11 @@ class Env extends IController {
 		proxy:false
 	    }}});
     }
-    
+
     play( opt ){
 	this.load( opt, _ => this.pool.call("runSim") );
     }
-    
+
     load( opt, cb ){
 
 	let url, srcurl, localsrc, title, useProxy = true;
@@ -218,7 +227,7 @@ class Env extends IController {
 
 	if( !url || url == 'new' )
 	    url = 'null';
-	
+
 	this.model.removeItem("app.AT32u4");
 	this.model.removeItem("ram.srcpath");
 	this.model.removeItem("ram.localSourcePath");
@@ -236,21 +245,21 @@ class Env extends IController {
 	let github = url.match(/^https:\/\/raw.githubusercontent.com\/(.*)$/i);
 	if( github && proxy )
 	    finalURL = 'https://gitcdn.xyz/repo/' + github[1];
-	
+
 	if( !finalURL )
 	    finalURL = proxy + url;
-	
+
 	if( build || url == "null" ){
-	    
+
 	    if( build )
 		this.model.setItem("app.AT32u4.hex", build);
 	    else
 		this.model.setItem("app.AT32u4.url", url);
-	    
+
 	    cb();
-	
+
 	} else if( /\.arduboy$/i.test(url) ){
-	    
+
 	    let zip = null;
 	    fetch( finalURL )
 		.then( rsp => rsp.arrayBuffer() )
@@ -282,7 +291,7 @@ class Env extends IController {
 	let ghmatch = srcurl &&
 	    srcurl.match(/^(https\:\/\/(bitbucket\.org|framagit\.org|github\.com)\/[^/]+\/[^/]+).*/) ||
 	    url.match(/^(https\:\/\/(bitbucket\.org|framagit\.org|github\.com)\/[^/]+\/[^/]+).*/);
-	
+
 	if( ghmatch ){
 	    srcurl = ghmatch[1] + "/archive/master.zip";
 	}else if( srcurl && /.*\.(?:zip|ino)$/.test(srcurl) ){
@@ -290,14 +299,14 @@ class Env extends IController {
 	    srcurl = url;
 	}else srcurl = null;
 
-	this.model.setItem("ram.srcurl", srcurl);	
-	
+	this.model.setItem("ram.srcurl", srcurl);
+
     }
 
     loadArduboy( buff, cb ){
 	let zip;
 	let source = this.model.getModel( this.model.getItem("ram.srcpath"), true);
-	
+
 	JSZip.loadAsync( buff )
 	    .then( z => (zip=z).file("info.json").async("text") )
 	    .then( info => zip.file( JSON.parse( fixJSON(info) ).binaries[0].filename).async("text") )
@@ -308,15 +317,15 @@ class Env extends IController {
 	    });
 
 	function fixJSON( str ){
-	    
+
 	    if( str.charCodeAt(0) == 0xFEFF )
 		str = str.substr(1);
-	    
+
 	    return str.replace(/\,(?!\s*?[\{\[\"\'\w])/g, '');
-	    
+
 	}
-	
-	
+
+
     }
 
 }
